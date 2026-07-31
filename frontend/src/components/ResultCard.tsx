@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Repository, TechStack, HealthScore } from '../types';
-import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, RocketIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon } from './icons';
+import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, RocketIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
 import { downloadReadme } from '../services/api';
 
 interface ResultCardProps {
@@ -141,7 +141,7 @@ const ResultCard = ({
                   <FolderIcon className="w-5 h-5 text-brand-500" />
                   Folder Structure
                 </h3>
-                <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto font-mono">{folder_structure}</pre>
+                <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto font-mono">{folderStructure}</pre>
               </div>
 
               <div>
@@ -149,7 +149,7 @@ const ResultCard = ({
                   <ServerIcon className="w-5 h-5 text-brand-500" />
                   Architecture Summary
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{architecture_summary}</p>
+                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{architectureSummary}</p>
               </div>
             </div>
           )}
@@ -158,7 +158,7 @@ const ResultCard = ({
             <div>
               <h3 className="text-lg font-semibold mb-3">Generated README</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 font-mono text-sm whitespace-pre-wrap border border-gray-200 dark:border-gray-800">
-                {readme_content}
+                {readmeContent}
               </div>
             </div>
           )}
