@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Repository, TechStack, HealthScore } from '../types';
-import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, RocketIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
+import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, RocketIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon } from './icons';
 import { downloadReadme } from '../services/api';
 
 interface ResultCardProps {
@@ -28,6 +28,7 @@ const ResultCard = ({
 }: ResultCardProps) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'readme' | 'tech' | 'health'>('overview');
   const [copied, setCopied] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleCopyReadme = async () => {
     try {
@@ -35,7 +36,6 @@ const ResultCard = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback
       const textArea = document.createElement('textarea');
       textArea.value = readmeContent;
       document.body.appendChild(textArea);
@@ -49,6 +49,11 @@ const ResultCard = ({
 
   const handleDownload = () => {
     downloadReadme(readmeContent);
+  };
+
+  const handleDownloadAll = () => {
+    const allDocs = `# ${repository.name}\n\n${readmeContent}\n\n---\n\n## Installation Guide\n\n${installationGuide}\n\n---\n\n## Architecture\n\n${architectureSummary}\n\n---\n\n## API Documentation\n\n${apiDocumentation}\n\n---\n\n## Health Score\n\n${JSON.stringify(healthScore, null, 2)}\n\n---\n\n## Suggestions\n\n${suggestions.map(s => `- ${s}`).join('\n')}`;
+    downloadReadme(allDocs);
   };
 
   const scoreColor = (score: number) => {
@@ -71,7 +76,11 @@ const ResultCard = ({
             <h2 className="text-2xl font-bold">{repository.name}</h2>
             <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{repository.full_name}</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
+            <button onClick={handleDownloadAll} className="btn-secondary flex items-center gap-2 text-sm">
+              <DownloadIcon className="w-4 h-4" />
+              Download All
+            </button>
             <button onClick={handleCopyReadme} className="btn-secondary flex items-center gap-2 text-sm">
               {copied ? <CheckCircleIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
               {copied ? 'Copied!' : 'Copy'}
@@ -132,7 +141,7 @@ const ResultCard = ({
                   <FolderIcon className="w-5 h-5 text-brand-500" />
                   Folder Structure
                 </h3>
-                <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto font-mono">{folderStructure}</pre>
+                <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto font-mono">{folder_structure}</pre>
               </div>
 
               <div>
@@ -140,7 +149,7 @@ const ResultCard = ({
                   <ServerIcon className="w-5 h-5 text-brand-500" />
                   Architecture Summary
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{architectureSummary}</p>
+                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{architecture_summary}</p>
               </div>
             </div>
           )}
@@ -149,7 +158,7 @@ const ResultCard = ({
             <div>
               <h3 className="text-lg font-semibold mb-3">Generated README</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 font-mono text-sm whitespace-pre-wrap border border-gray-200 dark:border-gray-800">
-                {readmeContent}
+                {readme_content}
               </div>
             </div>
           )}
@@ -259,6 +268,20 @@ const ResultCard = ({
           )}
         </div>
       </div>
+
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowPreview(false)}>
+          <div className="bg-white dark:bg-gray-900 rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-auto p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">README Preview</h3>
+              <button onClick={() => setShowPreview(false)} className="text-gray-500 hover:text-gray-900 dark:hover:text-gray-100 text-2xl">&times;</button>
+            </div>
+            <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap font-mono">
+              {readmeContent}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
