@@ -27,7 +27,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd backend
-          pytest tests/ -v
+          PYTHONPATH=.. pytest tests/ -v
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
