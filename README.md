@@ -78,9 +78,9 @@ cp .env.example .env
 ### Architecture
 
 - **Frontend**: AWS Amplify (React SPA)
-- **Backend**: AWS Lambda (FastAPI container image)
+- **Backend**: AWS App Runner (FastAPI container) or AWS Lambda (FastAPI container image)
 - **AI**: Amazon Bedrock (Nova Lite)
-- **API**: Amazon API Gateway (REST API)
+- **API**: Amazon App Runner URL or API Gateway (REST API)
 
 ### Local Development
 
@@ -109,13 +109,35 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Docker Build
+### Docker Build (App Runner)
 
-Build the Docker image for Lambda container deployment:
+Build the Docker image for App Runner deployment:
 
 ```bash
 docker build -t repodoc-ai-backend .
 ```
+
+### App Runner Deployment
+
+1. Push the Docker image to Amazon ECR:
+
+```bash
+aws ecr create-repository --repository-name repodoc-ai-backend
+docker tag repodoc-ai-backend:latest <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest
+docker push <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest
+```
+
+2. Create an App Runner service:
+
+```bash
+aws apprunner create-service \
+  --service-name repodoc-ai-backend \
+  --source-configuration ImageRepository="{ImageRepositoryType=ECR,ImageIdentifier=<account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest}" \
+  --instance-configuration InstanceSize=SMALL \
+  --environment-variables Variable=[{Name=AWS_REGION,Value=us-east-1},{Name=GITHUB_TOKEN,Value=<github-token>},{Name=CORS_ORIGINS,Value=https://repodoc.ai}]
+```
+
+3. App Runner automatically provides a service URL (e.g., `https://<service-id>.apprunner.amazonaws.com`).
 
 ### Lambda Deployment
 
@@ -150,49 +172,45 @@ aws lambda create-function \
 | `GITHUB_TOKEN` | GitHub personal access token |
 | `CORS_ORIGINS` | Comma-separated list of allowed origins (e.g., `https://repodoc.ai`) |
 
-### API Gateway Deployment
-
-1. Create a REST API in API Gateway:
-
-```bash
-aws apigateway create-rest-api --name 'RepoDoc AI API'
-```
-
-2. Create a resource and method that integrates with the Lambda function:
-
-```bash
-aws apigateway put-method \
-  --rest-api-id <api-id> \
-  --resource-id <resource-id> \
-  --http-method ANY \
-  --authorization-type NONE
-
-aws apigateway put-integration \
-  --rest-api-id <api-id> \
-  --resource-id <resource-id> \
-  --http-method ANY \
-  --type AWS_PROXY \
-  --integration-http-method POST \
-  --uri arn:aws:apigateway:<region>:lambda:path/2015-03-31/functions/arn:aws:lambda:<region>:<account-id>:function:repodoc-ai-backend/invocations
-```
-
-3. Deploy the API:
-
-```bash
-aws apigateway create-deployment \
-  --rest-api-id <api-id> \
-  --stage-name prod
-```
+4. Create API Gateway and integrate with the Lambda function.
 
 ### Environment Variables
 
-Copy `.env.example` to `.env` and fill in your values:
+All environment variables are read from the `.env` file or set directly in the deployment environment. Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
 cp .env.example .env
 ```
 
-## License
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `AWS_REGION` | Yes | `us-east-1` | AWS region for Bedrock and other services |
+| `AWS_ACCESS_KEY_ID` | Yes | *(empty)* | AWS access key ID for Bedrock access |
+| `AWS_SECRET_ACCESS_KEY` | Yes | *(empty)* | AWS secret access key for Bedrock access |
+| `BEDROCK_MODEL_ID` | No | `anthropic.claude-3-haiku-20240307` | Amazon Bedrock model identifier |
+| `GITHUB_TOKEN` | Yes | *(empty)* | GitHub personal access token for repo access |
+| `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated list of allowed CORS origins |
+| `PORT` | No | `8080` | Port the server listens on (App Runner) |
+
+### Environment Variables for Bedrock IAM Permissions
+
+The Lambda/App Runner service role needs the following IAM permissions for Amazon Bedrock:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": "arn:aws:bedrock:*::foundation-model/*"
+    }
+  ]
+}
+```
 
 MIT
 
