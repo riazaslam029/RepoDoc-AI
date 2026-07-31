@@ -29,8 +29,20 @@ Folder Structure:
 Dependencies:
 {dependencies}
 
-CI/CD:
-{ci_cd}
+CI/CD: {ci_cd}
+
+README Quality Score: {readme_quality}/100
+Has Badges: {has_badges}
+Has Installation Section: {has_installation}
+Has Usage Section: {has_usage}
+Has Contributing Guide: {has_contributing}
+Has API Reference: {has_api_reference}
+Has Screenshots: {has_screenshots}
+Has Dockerfile: {has_dockerfile}
+Docker Base Image: {docker_base_image}
+Has CI/CD Pipeline: {has_ci}
+CI/CD Type: {ci_type}
+Test Framework: {test_framework}
 
 Write a comprehensive README.md that includes:
 1. Project title and description
@@ -103,11 +115,20 @@ Repository: {repo_name}
 Has README: {has_readme}
 Has License: {has_license}
 Has Contributing Guide: {has_contributing}
-Has README with sections: {readme_sections}
-Has Examples: {has_examples}
+Has Contributing Guide (file): {has_contributing_guide}
+README Quality Score: {readme_quality}/100
+Has Badges: {has_badges}
+Has Installation Section: {has_installation}
+Has Usage Section: {has_usage}
 Has API Documentation: {has_api_docs}
-Has Architecture Docs: {has_architecture}
+Has Examples: {has_examples}
 Has Screenshots: {has_screenshots}
+Has Architecture Docs: {has_architecture}
+Has Dockerfile: {has_dockerfile}
+Has CI/CD Pipeline: {has_ci}
+Has Tests: {has_tests}
+Has Healthcheck: {has_healthcheck}
+Has Multi-stage Build: {has_multi_stage_build}
 
 Score each category out of 100 and provide an overall score.
 Also provide specific suggestions for improvement."""
@@ -116,8 +137,15 @@ SUGGESTIONS_PROMPT = """Based on the following repository analysis, provide acti
 
 Repository: {repo_name}
 Tech Stack: {tech_stack}
-Current README Quality: {readme_quality}
-Health Score: {health_score}
+Current README Quality: {readme_quality}/100
+Health Score: {health_score}/100
 Missing Elements: {missing_elements}
 
-Provide 5-8 specific, actionable suggestions to improve the project documentation. Prioritize high-impact, low-effort improvements."""
+Provide 5-8 specific, actionable suggestions to improve the project documentation. Prioritize high-impact, low-effort improvements. Focus on:
+1. Missing README sections
+2. Documentation gaps
+3. Code quality indicators
+4. Best practices that should be adopted
+5. User experience improvements
+
+Be specific and actionable in your suggestions."""
