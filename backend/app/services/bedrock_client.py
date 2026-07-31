@@ -1,9 +1,14 @@
+try:
+    import boto3
+    from botocore.config import Config
+    from botocore.exceptions import ClientError
+    BOTO3_AVAILABLE = True
+except ImportError:
+    BOTO3_AVAILABLE = False
+
 import json
 import time
 import logging
-import boto3
-from botocore.config import Config
-from botocore.exceptions import ClientError
 from typing import Optional, AsyncGenerator
 from app.config import settings
 
@@ -53,6 +58,8 @@ class BedrockClient:
         self.client = self._create_client()
 
     def _create_client(self):
+        if not BOTO3_AVAILABLE:
+            raise BedrockError('boto3 is not installed')
         config = Config(
             retries={'max_attempts': 3, 'mode': 'adaptive'},
             connect_timeout=10,
