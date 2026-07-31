@@ -21,8 +21,7 @@ jobs:
         run: |
           cd backend
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio httpx
+          pip install fastapi uvicorn httpx boto3 pydantic python-dotenv PyYAML pytest pytest-asyncio
 
       - name: Run backend tests
         run: |
