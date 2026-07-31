@@ -4,6 +4,7 @@ from typing import Optional
 from app.services.analyzer import RepositoryAnalyzer
 from app.services.bedrock_client import BedrockClient
 from app.services.prompt_engine import generate_documentation
+from app.services.health_score import HealthScorer
 
 router = APIRouter()
 
@@ -95,14 +96,17 @@ async def analyze_repo(request: AnalyzeRequest):
             api_documentation = ''
 
         try:
-            health_score = await generate_documentation(analysis, 'health_score')
+            health_scorer = HealthScorer(analysis)
+            health_score_data = health_scorer.compute_overall()
+            suggestions_data = health_scorer.get_suggestions()
         except Exception:
-            health_score = 'Overall: 0/100'
+            health_score_data = {'overall': 0}
+            suggestions_data = []
 
         try:
             suggestions = await generate_documentation(analysis, 'suggestions')
         except Exception:
-            suggestions = []
+            suggestions = suggestions_data
 
         return AnalyzeResponse(
             repository=analysis.get('repository', {}),
@@ -112,8 +116,8 @@ async def analyze_repo(request: AnalyzeRequest):
             readme_content=readme_content,
             installation_guide=installation_guide,
             api_documentation=api_documentation,
-            health_score={'overall': 0, 'details': health_score},
-            suggestions=suggestions if isinstance(suggestions, list) else [suggestions] if suggestions else [],
+            health_score=health_score_data,
+            suggestions=suggestions if isinstance(suggestions, list) else [suggestions] if suggestions else suggestions_data,
         )
     except HTTPException:
         raise
