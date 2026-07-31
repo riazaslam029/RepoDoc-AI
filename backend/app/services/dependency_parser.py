@@ -78,13 +78,14 @@ def parse_pyproject_toml(content: str) -> dict:
         if next_section:
             section = section[:next_section.start()]
 
-        for line in section.split('\n'):
-            line = line.strip()
-            if line.startswith('dependencies') or line.startswith('requires-python'):
-                continue
-            dep_match = re.match(r'^([a-zA-Z0-9_-]+)\s*=', line)
-            if dep_match:
-                dependencies.append(dep_match.group(1))
+        # Parse dependencies list
+        deps_match = re.search(r'dependencies\s*=\s*\[(.*?)\]', section, re.DOTALL)
+        if deps_match:
+            deps_content = deps_match.group(1)
+            for dep in re.findall(r'"([^"]+)"', deps_content):
+                dependencies.append(dep)
+            for dep in re.findall(r"'([^']+)'", deps_content):
+                dependencies.append(dep)
 
     framework_indicators = {
         'Django': ['django'],

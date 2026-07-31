@@ -2,13 +2,10 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
 from app.services.analyzer import RepositoryAnalyzer
-from app.services.bedrock_client import BedrockClient
 from app.services.prompt_engine import generate_documentation
 from app.services.health_score import HealthScorer
 
 router = APIRouter()
-
-bedrock = BedrockClient()
 
 
 class AnalyzeRequest(BaseModel):

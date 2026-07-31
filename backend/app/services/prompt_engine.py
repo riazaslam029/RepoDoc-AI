@@ -1,12 +1,19 @@
 import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict
 from app.services.bedrock_client import BedrockClient
 from app.config import settings
 
 
-bedrock = BedrockClient()
+_prompt_engine_bedrock = None
 PROMPTS_DIR = Path(__file__).parent.parent.parent.parent / 'prompts'
+
+
+def _get_bedrock() -> BedrockClient:
+    global _prompt_engine_bedrock
+    if _prompt_engine_bedrock is None:
+        _prompt_engine_bedrock = BedrockClient()
+    return _prompt_engine_bedrock
 
 
 def load_prompt(name: str) -> str:
@@ -20,7 +27,7 @@ async def generate_documentation(repo_data: dict, doc_type: str) -> str:
     prompt = _build_prompt(doc_type, repo_data)
     if not prompt:
         return ''
-    return await bedrock.generate(prompt)
+    return await _get_bedrock().generate(prompt)
 
 
 def _build_prompt(doc_type: str, repo_data: dict) -> str:
