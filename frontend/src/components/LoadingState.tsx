@@ -1,6 +1,3 @@
-import React from 'react';
-import { RefreshIcon } from './icons';
-
 interface LoadingStateProps {
   progress: number;
   message: string;

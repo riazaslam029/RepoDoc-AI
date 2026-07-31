@@ -1,4 +1,3 @@
-import React from 'react';
 import { XCircleIcon, RefreshIcon } from './icons';
 
 interface ErrorStateProps {

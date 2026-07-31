@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Repository, AnalysisResult, TechStack, HealthScore } from '../types';
-import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, DatabaseIcon, RocketIcon, ShieldCheckIcon, CheckCircleIcon, XCircleIcon } from './icons';
+import { useState } from 'react';
+import { Repository, TechStack, HealthScore } from '../types';
+import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, RocketIcon, ShieldCheckIcon, CheckCircleIcon } from './icons';
 import { downloadReadme } from '../services/api';
 
 interface ResultCardProps {

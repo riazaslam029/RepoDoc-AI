@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GitHubIcon, SparklesIcon, ArrowRightIcon, CodeBracketIcon, DocumentTextIcon, BoltIcon, CheckCircleIcon, ServerIcon, DatabaseIcon, RocketIcon, ShieldCheckIcon } from '../components/icons';
+import { GitHubIcon, SparklesIcon, ArrowRightIcon, CodeBracketIcon, DocumentTextIcon, BoltIcon } from '../components/icons';
 import { validateGitHubUrl } from '../utils/validation';
 
 const features = [

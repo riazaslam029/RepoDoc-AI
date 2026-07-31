@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { AnalysisResult, AnalysisStatus } from '../types';
 import { analyzeRepository } from '../services/api';
@@ -7,7 +7,7 @@ import LoadingState from '../components/LoadingState';
 import ResultCard from '../components/ResultCard';
 import ErrorState from '../components/ErrorState';
 
-const DashboardPage() {
+const DashboardPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [status, setStatus] = useState<AnalysisStatus>({
