@@ -2,9 +2,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
 from app.services.analyzer import RepositoryAnalyzer
-from app.services.bedrock_client import generate_documentation
+from app.services.bedrock_client import BedrockClient
+from app.services.prompt_engine import generate_documentation
 
 router = APIRouter()
+
+bedrock = BedrockClient()
 
 
 class AnalyzeRequest(BaseModel):
@@ -39,6 +42,15 @@ async def health_check():
     return {'status': 'ok', 'version': '1.0.0'}
 
 
+@router.get('/health/bedrock')
+async def bedrock_health_check():
+    try:
+        result = await bedrock.health_check()
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=str(e))
+
+
 @router.post('/validate', response_model=ValidateResponse)
 async def validate_repo(request: ValidateRequest):
     try:
@@ -62,12 +74,35 @@ async def analyze_repo(request: AnalyzeRequest):
 
         analysis = await analyzer.analyze(request.repo_url)
 
-        readme_content = await generate_documentation(analysis, 'readme')
-        installation_guide = await generate_documentation(analysis, 'installation')
-        architecture_summary = await generate_documentation(analysis, 'architecture')
-        api_documentation = await generate_documentation(analysis, 'api')
-        health_score = await generate_documentation(analysis, 'health_score')
-        suggestions = await generate_documentation(analysis, 'suggestions')
+        try:
+            readme_content = await generate_documentation(analysis, 'readme')
+        except Exception as e:
+            readme_content = f'# {analysis["repository"]["name"]}\n\n{analysis["repository"]["description"] or "No description"}'
+
+        try:
+            installation_guide = await generate_documentation(analysis, 'installation')
+        except Exception:
+            installation_guide = ''
+
+        try:
+            architecture_summary = await generate_documentation(analysis, 'architecture')
+        except Exception:
+            architecture_summary = ''
+
+        try:
+            api_documentation = await generate_documentation(analysis, 'api')
+        except Exception:
+            api_documentation = ''
+
+        try:
+            health_score = await generate_documentation(analysis, 'health_score')
+        except Exception:
+            health_score = 'Overall: 0/100'
+
+        try:
+            suggestions = await generate_documentation(analysis, 'suggestions')
+        except Exception:
+            suggestions = []
 
         return AnalyzeResponse(
             repository=analysis.get('repository', {}),
@@ -77,8 +112,8 @@ async def analyze_repo(request: AnalyzeRequest):
             readme_content=readme_content,
             installation_guide=installation_guide,
             api_documentation=api_documentation,
-            health_score=health_score,
-            suggestions=suggestions,
+            health_score={'overall': 0, 'details': health_score},
+            suggestions=suggestions if isinstance(suggestions, list) else [suggestions] if suggestions else [],
         )
     except HTTPException:
         raise
