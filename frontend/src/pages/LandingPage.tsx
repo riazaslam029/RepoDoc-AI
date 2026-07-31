@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { GitHubIcon, SparklesIcon, ArrowRightIcon, CodeBracketIcon, DocumentTextIcon, BoltIcon, CheckCircleIcon, ServerIcon, DatabaseIcon, RocketIcon, ShieldCheckIcon } from '../components/icons';
+import { validateGitHubUrl } from '../utils/validation';
 
 const features = [
   {
@@ -49,10 +50,10 @@ const howItWorks = [
 ];
 
 const ScrollReveal = ({ children, className = '' }: { children: React.ReactNode; className?: string }) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
 
-  useEffect(() => {
+  React.useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -82,14 +83,22 @@ const ScrollReveal = ({ children, className = '' }: { children: React.ReactNode;
   );
 };
 
-const LandingPage() {
+const LandingPage = () => {
   const [url, setUrl] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url.trim()) return;
+    setError('');
+
+    const validation = validateGitHubUrl(url);
+    if (!validation.valid) {
+      setError(validation.error || 'Invalid URL');
+      return;
+    }
+
     setLoading(true);
     navigate('/dashboard', { state: { repoUrl: url } });
   };
@@ -122,15 +131,21 @@ const LandingPage() {
                   <input
                     type="url"
                     value={url}
-                    onChange={(e) => setUrl(e.target.value)}
+                    onChange={(e) => {
+                      setUrl(e.target.value);
+                      setError('');
+                    }}
                     placeholder="https://github.com/user/repo"
-                    className="input-field flex-1 text-base"
+                    className={`input-field flex-1 text-base ${error ? 'border-red-500 focus:ring-red-500' : ''}`}
                     required
                   />
                   <button type="submit" disabled={loading} className="btn-primary text-base px-8">
                     {loading ? 'Analyzing...' : 'Analyze'}
                   </button>
                 </div>
+                {error && (
+                  <p className="text-red-500 dark:text-red-400 text-sm mt-2 animate-fadeIn">{error}</p>
+                )}
               </form>
               <p className="text-sm text-gray-500 dark:text-gray-500 animate-slideUp" style={{ animationDelay: '0.3s' }}>
                 Supports public repositories. No code is stored — analysis happens in real-time.
@@ -230,6 +245,6 @@ const LandingPage() {
       </section>
     </div>
   );
-}
+};
 
 export default LandingPage;

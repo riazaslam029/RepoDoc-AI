@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
-from app.services.analyzer import analyze_repository
+from app.services.analyzer import RepositoryAnalyzer
 from app.services.bedrock_client import generate_documentation
 
 router = APIRouter()
@@ -23,21 +23,56 @@ class AnalyzeResponse(BaseModel):
     suggestions: list[str]
 
 
+class ValidateRequest(BaseModel):
+    repo_url: str
+
+
+class ValidateResponse(BaseModel):
+    valid: bool
+    error: Optional[str] = None
+    owner: Optional[str] = None
+    repo: Optional[str] = None
+
+
+@router.get('/health')
+async def health_check():
+    return {'status': 'ok', 'version': '1.0.0'}
+
+
+@router.post('/validate', response_model=ValidateResponse)
+async def validate_repo(request: ValidateRequest):
+    try:
+        owner, repo = RepositoryAnalyzer()._parse_url(request.repo_url)
+        return ValidateResponse(valid=True, owner=owner, repo=repo)
+    except ValueError as e:
+        return ValidateResponse(valid=False, error=str(e))
+
+
 @router.post('/analyze', response_model=AnalyzeResponse)
 async def analyze_repo(request: AnalyzeRequest):
     try:
-        repo_data = await analyze_repository(request.repo_url)
-        readme_content = await generate_documentation(repo_data, 'readme')
-        installation_guide = await generate_documentation(repo_data, 'installation')
-        architecture_summary = await generate_documentation(repo_data, 'architecture')
-        api_documentation = await generate_documentation(repo_data, 'api')
-        health_score = await generate_documentation(repo_data, 'health_score')
-        suggestions = await generate_documentation(repo_data, 'suggestions')
+        analyzer = RepositoryAnalyzer()
+        owner, repo = analyzer._parse_url(request.repo_url)
+
+        repo_data = await analyzer.github.get_repository(owner, repo)
+        if repo_data.get('private'):
+            raise HTTPException(status_code=400, detail='Private repositories are not supported')
+        if repo_data.get('archived'):
+            raise HTTPException(status_code=400, detail='Archived repositories are not supported')
+
+        analysis = await analyzer.analyze(request.repo_url)
+
+        readme_content = await generate_documentation(analysis, 'readme')
+        installation_guide = await generate_documentation(analysis, 'installation')
+        architecture_summary = await generate_documentation(analysis, 'architecture')
+        api_documentation = await generate_documentation(analysis, 'api')
+        health_score = await generate_documentation(analysis, 'health_score')
+        suggestions = await generate_documentation(analysis, 'suggestions')
 
         return AnalyzeResponse(
-            repository=repo_data.get('repository', {}),
-            tech_stack=repo_data.get('tech_stack', {}),
-            folder_structure=repo_data.get('folder_structure', ''),
+            repository=analysis.get('repository', {}),
+            tech_stack=analysis.get('tech_stack', {}),
+            folder_structure=analysis.get('folder_structure', ''),
             architecture_summary=architecture_summary,
             readme_content=readme_content,
             installation_guide=installation_guide,
@@ -47,5 +82,7 @@ async def analyze_repo(request: AnalyzeRequest):
         )
     except HTTPException:
         raise
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

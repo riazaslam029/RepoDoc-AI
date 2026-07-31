@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { AnalysisResult } from '../types';
+import { validateGitHubUrl } from '../utils/validation';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
@@ -24,6 +25,19 @@ api.interceptors.response.use(
     return Promise.reject(new Error('An unexpected error occurred'));
   },
 );
+
+export const validateRepoUrl = async (url: string): Promise<{ valid: boolean; error?: string; owner?: string; repo?: string }> => {
+  const validation = validateGitHubUrl(url);
+  if (!validation.valid) {
+    return validation;
+  }
+  try {
+    const response = await api.post('/api/v1/validate', { repo_url: url });
+    return response.data;
+  } catch {
+    return validation;
+  }
+};
 
 export const analyzeRepository = async (repoUrl: string): Promise<{ data: AnalysisResult }> => {
   const response = await api.post('/api/v1/analyze', { repo_url: repoUrl });
