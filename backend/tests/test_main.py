@@ -19,9 +19,9 @@ def test_health_check():
     assert response.json()['status'] == 'ok'
 
 
-def test_validate_endpoint_returns_422_for_invalid_url():
+def test_validate_endpoint_returns_400_for_invalid_url():
     app = _get_app()
     assert app is not None, 'Failed to import app'
     client = TestClient(app)
     response = client.post('/api/v1/analyze', json={'repo_url': 'not-a-url'})
-    assert response.status_code == 422
+    assert response.status_code == 400
