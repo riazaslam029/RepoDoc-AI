@@ -30,7 +30,7 @@ export const validateRepoUrl = async (url: string): Promise<{ valid: boolean; er
     return validation;
   }
   try {
-    const response = await api.post('/api/v1/validate', { repo_url: url });
+    const response = await api.post('/v1/validate', { repo_url: url });
     return response.data;
   } catch {
     return validation;
@@ -38,7 +38,7 @@ export const validateRepoUrl = async (url: string): Promise<{ valid: boolean; er
 };
 
 export const analyzeRepository = async (repoUrl: string): Promise<{ data: AnalysisResult }> => {
-  const response = await api.post('/api/v1/analyze', { repo_url: repoUrl });
+    const response = await api.post('/v1/analyze', { repo_url: repoUrl });
   return response.data;
 };
 
