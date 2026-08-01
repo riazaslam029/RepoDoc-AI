@@ -5,10 +5,10 @@ After=network.target
 [Service]
 Type=simple
 User=ec2-user
-WorkingDirectory=/home/ec2-user/repodoc-ai/backend
+WorkingDirectory=/home/ec2-user/repodoc-ai/repo/backend
 Environment=PORT=8000
 Environment=HOST=0.0.0.0
-ExecStart=/home/ec2-user/repodoc-ai/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --log-level info
+ExecStart=/home/ec2-user/repodoc-ai/repo/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --log-level info
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal

@@ -160,24 +160,18 @@ sudo journalctl -u repodoc-ai -f
 curl http://localhost:8000/health
 ```
 
-#### Step 5: Configure Nginx Reverse Proxy
+#### Step 5: Connect Amplify Frontend
 
-The setup script configures Nginx automatically. Verify:
+The setup script builds the frontend and deploys it via Nginx. Set the `VITE_API_URL` environment variable in Amplify to the EC2 instance URL (though with the new same-origin architecture, this is no longer required — Nginx handles routing):
 
-```bash
-sudo systemctl status nginx
-sudo nginx -t
 ```
-
-The backend is now accessible at `http://<instance-public-ip>/`.
-
-#### Step 6: Connect Amplify Frontend
-
-Since both frontend and backend now share the same origin via Nginx, no `VITE_API_URL` environment variable is needed. The frontend automatically proxies API requests through Nginx.
+# Optional: Only needed if using a custom domain or separate backend URL
+VITE_API_URL=http://<instance-public-ip>
+```
 
 Then rebuild and redeploy the Amplify frontend.
 
-#### Step 7: Verify After Reboot
+#### Step 6: Verify After Reboot
 
 The systemd service is enabled to start on boot. Test:
 
