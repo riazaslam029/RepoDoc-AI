@@ -45,6 +45,17 @@ server {
 }
 EOF
 
+CORS_ORIGINS="${CORS_ORIGINS:-https://main.dpj4xk9u0xryq.amplifyapp.com}"
+
+cat > /home/ec2-user/repodoc-ai/backend/.env << EOF
+AWS_REGION=ap-south-1
+BEDROCK_MODEL_ID=anthropic.claude-3-haiku-20240307
+GITHUB_TOKEN=${GITHUB_TOKEN:-}
+CORS_ORIGINS=$CORS_ORIGINS
+EOF
+
+sudo systemctl restart repodoc-ai.service
+
 systemctl restart nginx
 
 aws configure set region ap-south-1

@@ -8,6 +8,7 @@ User=ec2-user
 WorkingDirectory=/home/ec2-user/repodoc-ai/backend
 Environment=PORT=8000
 Environment=HOST=0.0.0.0
+Environment=CORS_ORIGINS=https://main.dpj4xk9u0xryq.amplifyapp.com
 ExecStart=/home/ec2-user/repodoc-ai/backend/venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --log-level info
 Restart=on-failure
 RestartSec=10
