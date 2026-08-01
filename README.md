@@ -24,7 +24,7 @@ Automate your project documentation with AI. Paste a GitHub URL and get a comple
 | Frontend    | React, Vite, Tailwind CSS, TypeScript |
 | Backend     | FastAPI, Python                     |
 | AI          | Amazon Bedrock, Nova Lite           |
-| AWS         | Amplify, App Runner   |
+| AWS         | Amplify, EC2, Nginx   |
 | GitHub      | GitHub REST API                     |
 
 ## Project Structure
@@ -78,8 +78,9 @@ cp .env.example .env
 ### Architecture
 
 - **Frontend**: AWS Amplify (React SPA)
-- **Backend**: AWS App Runner (FastAPI container)
+- **Backend**: AWS EC2 (Amazon Linux 2023, systemd + Uvicorn)
 - **AI**: Amazon Bedrock (Nova Lite)
+- **Web Server**: Nginx (reverse proxy)
 
 ### Local Development
 
@@ -108,57 +109,94 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Docker Build
+### EC2 Deployment (Amazon Linux 2023)
 
-Build the Docker image for App Runner deployment:
+#### Prerequisites
 
-```bash
-docker build -t repodoc-ai-backend .
-```
+- AWS EC2 instance (t3.micro or larger) running Amazon Linux 2023
+- Security group allowing HTTP (port 80) and HTTPS (port 443)
+- EC2 IAM role with Bedrock permissions
+- SSH key pair for instance access
 
-### App Runner Deployment
+#### Step 1: Launch EC2 Instance
 
-1. Push the Docker image to Amazon ECR:
+1. Launch an EC2 instance with Amazon Linux 2023 AMI
+2. Instance type: t3.micro (minimum) or t3.small (recommended)
+3. Attach an IAM role with Bedrock permissions (see below)
+4. Configure security group to allow ports 80 and 443
 
-```bash
-aws ecr create-repository --repository-name repodoc-ai-backend
-docker tag repodoc-ai-backend:latest <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest
-docker push <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest
-```
-
-2. Create an App Runner service:
+#### Step 2: Connect to Instance
 
 ```bash
-aws apprunner create-service \
-  --service-name repodoc-ai-backend \
-  --source-configuration ImageRepository="{ImageRepositoryType=ECR,ImageIdentifier=<account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest}" \
-  --instance-configuration CPU=1,Memory=2GB \
-  --environment-variables Variable=[{Name=AWS_REGION,Value=ap-south-1},{Name=BEDROCK_MODEL_ID,Value=anthropic.claude-3-haiku-20240307},{Name=CORS_ORIGINS,Value=https://repodoc-ai.netlify.app}]
+ssh -i your-key.pem ec2-user@<instance-public-ip>
 ```
 
-3. App Runner automatically provides a service URL (e.g., `https://<service-id>.apprunner.amazonaws.com`).
+#### Step 3: Run Setup Script
 
-4. Connect the Amplify frontend by setting the `VITE_API_URL` environment variable in Amplify to the App Runner service URL.
-
-### Environment Variables
-
-All environment variables are read from the `.env` file or set directly in the App Runner configuration. Copy `.env.example` to `.env` and fill in your values:
+Copy the user-data script to the instance and run it, or use EC2 user-data:
 
 ```bash
-cp .env.example .env
+# On your local machine, copy the setup script
+scp -i your-key.pem deploy/ec2-user-data.sh ec2-user@<instance-ip>:~/
+
+# SSH into the instance
+ssh -i your-key.pem ec2-user@<instance-ip>
+
+# Run the setup script
+chmod +x ~/ec2-user-data.sh
+sudo ~/ec2-user-data.sh
 ```
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `AWS_REGION` | Yes | `ap-south-1` | AWS region for Bedrock |
-| `BEDROCK_MODEL_ID` | No | `anthropic.claude-3-haiku-20240307` | Amazon Bedrock model identifier |
-| `GITHUB_TOKEN` | Yes | *(empty)* | GitHub personal access token for repo access |
-| `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated list of allowed CORS origins |
-| `PORT` | No | `8080` | Port the server listens on (App Runner) |
+#### Step 4: Verify Deployment
 
-### IAM Role Permissions
+```bash
+# Check service status
+sudo systemctl status repodoc-ai
 
-The App Runner service role needs the following IAM permissions for Amazon Bedrock:
+# Check logs
+sudo journalctl -u repodoc-ai -f
+
+# Test the health endpoint
+curl http://localhost:8000/health
+```
+
+#### Step 5: Configure Nginx Reverse Proxy
+
+The setup script configures Nginx automatically. Verify:
+
+```bash
+sudo systemctl status nginx
+sudo nginx -t
+```
+
+The backend is now accessible at `http://<instance-public-ip>/`.
+
+#### Step 6: Connect Amplify Frontend
+
+Set the `VITE_API_URL` environment variable in Amplify to the EC2 instance URL:
+
+```
+VITE_API_URL=http://<instance-public-ip>
+```
+
+Then rebuild and redeploy the Amplify frontend.
+
+#### Step 7: Verify After Reboot
+
+The systemd service is enabled to start on boot. Test:
+
+```bash
+# Reboot the instance
+sudo reboot
+
+# After reboot, check the service
+sudo systemctl status repodoc-ai
+curl http://localhost:8000/health
+```
+
+### EC2 IAM Role Permissions
+
+The EC2 instance profile needs the following IAM permissions for Amazon Bedrock:
 
 ```json
 {
@@ -176,7 +214,51 @@ The App Runner service role needs the following IAM permissions for Amazon Bedro
 }
 ```
 
-boto3 automatically uses the App Runner IAM role for Bedrock access — no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` environment variables are needed.
+boto3 automatically uses the EC2 IAM role for Bedrock access — no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` environment variables are needed.
+
+### Environment Variables
+
+All environment variables are read from the `.env` file or set in the systemd service. Copy `.env.example` to `.env` and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `AWS_REGION` | Yes | `ap-south-1` | AWS region for Bedrock |
+| `BEDROCK_MODEL_ID` | No | `anthropic.claude-3-haiku-20240307` | Amazon Bedrock model identifier |
+| `GITHUB_TOKEN` | Yes | *(empty)* | GitHub personal access token for repo access |
+| `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated list of allowed CORS origins |
+| `PORT` | No | `8000` | Port the server listens on (EC2) |
+
+### Systemd Service
+
+The backend runs as a systemd service (`repodoc-ai.service`) with the following configuration:
+
+- **User**: `ec2-user`
+- **Working Directory**: `/home/ec2-user/repodoc-ai/backend`
+- **Port**: 8000
+- **Workers**: 2 (Uvicorn)
+- **Restart**: on-failure (10s delay)
+- **Log**: journald (`journalctl -u repodoc-ai`)
+
+### Monitoring
+
+```bash
+# View service logs
+sudo journalctl -u repodoc-ai -f
+
+# View Nginx logs
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+
+# Check service status
+sudo systemctl status repodoc-ai
+
+# Restart service
+sudo systemctl restart repodoc-ai
+```
 
 ## License
 
