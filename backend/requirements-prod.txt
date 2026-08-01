@@ -5,4 +5,3 @@ boto3==1.34.131
 pydantic==2.7.0
 python-dotenv==1.0.1
 PyYAML==6.0.1
-mangum==0.1.0

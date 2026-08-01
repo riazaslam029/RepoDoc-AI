@@ -1,7 +1,6 @@
 import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from mangum import Mangum
 from app.config import settings
 from app.routes import analyze
 
@@ -27,9 +26,7 @@ async def health_check():
     return {'status': 'ok', 'version': '1.0.0'}
 
 
-handler = Mangum(app)
-
-
 if __name__ == '__main__':
     import uvicorn
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    port = int(os.environ.get('PORT', 8080))
+    uvicorn.run(app, host='0.0.0.0', port=port)

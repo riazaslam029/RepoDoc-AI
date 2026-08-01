@@ -5,9 +5,7 @@ load_dotenv()
 
 
 class Settings:
-    AWS_REGION: str = os.getenv('AWS_REGION', 'us-east-1')
-    AWS_ACCESS_KEY_ID: str = os.getenv('AWS_ACCESS_KEY_ID', '')
-    AWS_SECRET_ACCESS_KEY: str = os.getenv('AWS_SECRET_ACCESS_KEY', '')
+    AWS_REGION: str = os.getenv('AWS_REGION', 'ap-south-1')
     BEDROCK_MODEL_ID: str = os.getenv('BEDROCK_MODEL_ID', 'anthropic.claude-3-haiku-20240307')
     GITHUB_TOKEN: str = os.getenv('GITHUB_TOKEN', '')
     GITHUB_API_URL: str = 'https://api.github.com'

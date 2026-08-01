@@ -1,7 +1,7 @@
 try:
-    import boto3
-    from botocore.config import Config
-    from botocore.exceptions import ClientError
+    import boto3  # type: ignore[import-not-found]
+    from botocore.config import Config  # type: ignore[import-not-found]
+    from botocore.exceptions import ClientError  # type: ignore[import-not-found]
     BOTO3_AVAILABLE = True
 except ImportError:
     BOTO3_AVAILABLE = False
@@ -9,7 +9,7 @@ except ImportError:
 import json
 import time
 import logging
-from typing import Optional, AsyncGenerator
+from typing import AsyncGenerator
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -68,8 +68,6 @@ class BedrockClient:
         return boto3.client(
             'bedrock-runtime',
             region_name=settings.AWS_REGION,
-            aws_access_key_id=settings.AWS_ACCESS_KEY_ID or None,
-            aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY or None,
             config=config,
         )
 
@@ -112,10 +110,10 @@ class BedrockClient:
                     import asyncio
                     await asyncio.sleep(delay)
                     continue
-            except AccessDeniedError as e:
+            except AccessDeniedError:
                 self._record_failure()
                 raise
-            except ModelNotFoundError as e:
+            except ModelNotFoundError:
                 self._record_failure()
                 raise
             except ClientError as e:
@@ -175,7 +173,7 @@ class BedrockClient:
 
                 self._record_success()
                 return
-            except ThrottlingError as e:
+            except ThrottlingError:
                 if attempt < self.max_retries - 1:
                     delay = self.retry_delay * (attempt + 1) * 2
                     import asyncio

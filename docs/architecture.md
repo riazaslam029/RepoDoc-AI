@@ -39,11 +39,11 @@ graph TD
 - Automatic SSL and custom domain support
 - CI/CD from GitHub
 
-### Backend: AWS Lambda + API Gateway
-- FastAPI application containerized with AWS Lambda
-- API Gateway for REST API endpoints
-- Auto-scaling, pay-per-request pricing
-- Cold start optimization with provisioned concurrency
+### Backend: AWS App Runner
+- FastAPI application containerized with Docker
+- AWS App Runner for managed container hosting
+- Auto-scaling, built-in load balancing
+- SSL/TLS termination
 
 ### AI: Amazon Bedrock
 - Nova Lite model for text generation
@@ -53,10 +53,10 @@ graph TD
 
 ### Data Flow
 1. User submits GitHub URL on the frontend
-2. Frontend sends request to API Gateway
-3. Lambda invokes GitHub REST API to fetch repository data
-4. Lambda analyzes repository structure and dependencies
-5. Lambda sends analysis to Amazon Bedrock (Nova Lite)
+2. Frontend sends request to App Runner service URL
+3. App Runner invokes GitHub REST API to fetch repository data
+4. Backend analyzes repository structure and dependencies
+5. Backend sends analysis to Amazon Bedrock (Nova Lite)
 6. Bedrock generates documentation content
-7. Response returned through API Gateway to frontend
+7. Response returned to frontend
 8. Frontend displays results with preview and download options

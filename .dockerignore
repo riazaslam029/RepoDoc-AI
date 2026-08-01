@@ -12,6 +12,7 @@ node_modules/
 .gitignore
 .dockerignore
 Dockerfile
+Dockerfile.lambda
 docker-compose.yml
 README.md
 docs/
@@ -19,3 +20,4 @@ prompts/
 tests/
 *.md
 .github/
+apprunner.yaml

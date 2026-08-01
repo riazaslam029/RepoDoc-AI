@@ -24,7 +24,7 @@ Automate your project documentation with AI. Paste a GitHub URL and get a comple
 | Frontend    | React, Vite, Tailwind CSS, TypeScript |
 | Backend     | FastAPI, Python                     |
 | AI          | Amazon Bedrock, Nova Lite           |
-| AWS         | Amplify, Lambda, API Gateway, S3    |
+| AWS         | Amplify, App Runner   |
 | GitHub      | GitHub REST API                     |
 
 ## Project Structure
@@ -78,9 +78,8 @@ cp .env.example .env
 ### Architecture
 
 - **Frontend**: AWS Amplify (React SPA)
-- **Backend**: AWS App Runner (FastAPI container) or AWS Lambda (FastAPI container image)
+- **Backend**: AWS App Runner (FastAPI container)
 - **AI**: Amazon Bedrock (Nova Lite)
-- **API**: Amazon App Runner URL or API Gateway (REST API)
 
 ### Local Development
 
@@ -109,7 +108,7 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### Docker Build (App Runner)
+### Docker Build
 
 Build the Docker image for App Runner deployment:
 
@@ -133,50 +132,17 @@ docker push <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:lates
 aws apprunner create-service \
   --service-name repodoc-ai-backend \
   --source-configuration ImageRepository="{ImageRepositoryType=ECR,ImageIdentifier=<account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest}" \
-  --instance-configuration InstanceSize=SMALL \
-  --environment-variables Variable=[{Name=AWS_REGION,Value=us-east-1},{Name=GITHUB_TOKEN,Value=<github-token>},{Name=CORS_ORIGINS,Value=https://repodoc.ai}]
+  --instance-configuration CPU=1,Memory=2GB \
+  --environment-variables Variable=[{Name=AWS_REGION,Value=ap-south-1},{Name=BEDROCK_MODEL_ID,Value=anthropic.claude-3-haiku-20240307},{Name=CORS_ORIGINS,Value=https://repodoc-ai.netlify.app}]
 ```
 
 3. App Runner automatically provides a service URL (e.g., `https://<service-id>.apprunner.amazonaws.com`).
 
-### Lambda Deployment
-
-1. Build and push the Docker image to Amazon ECR:
-
-```bash
-aws ecr create-repository --repository-name repodoc-ai-backend
-docker tag repodoc-ai-backend:latest <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest
-docker push <account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest
-```
-
-2. Create the Lambda function:
-
-```bash
-aws lambda create-function \
-  --function-name repodoc-ai-backend \
-  --package-type Image \
-  --code ImageUri=<account-id>.dkr.ecr.<region>.amazonaws.com/repodoc-ai-backend:latest \
-  --role <iam-role-arn> \
-  --timeout 30 \
-  --memory-size 512
-```
-
-3. Set environment variables in the Lambda configuration:
-
-| Variable | Description |
-|----------|-------------|
-| `AWS_REGION` | AWS region (e.g., `us-east-1`) |
-| `AWS_ACCESS_KEY_ID` | AWS access key for Bedrock |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret key for Bedrock |
-| `BEDROCK_MODEL_ID` | Bedrock model ID |
-| `GITHUB_TOKEN` | GitHub personal access token |
-| `CORS_ORIGINS` | Comma-separated list of allowed origins (e.g., `https://repodoc.ai`) |
-
-4. Create API Gateway and integrate with the Lambda function.
+4. Connect the Amplify frontend by setting the `VITE_API_URL` environment variable in Amplify to the App Runner service URL.
 
 ### Environment Variables
 
-All environment variables are read from the `.env` file or set directly in the deployment environment. Copy `.env.example` to `.env` and fill in your values:
+All environment variables are read from the `.env` file or set directly in the App Runner configuration. Copy `.env.example` to `.env` and fill in your values:
 
 ```bash
 cp .env.example .env
@@ -184,17 +150,15 @@ cp .env.example .env
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `AWS_REGION` | Yes | `us-east-1` | AWS region for Bedrock and other services |
-| `AWS_ACCESS_KEY_ID` | Yes | *(empty)* | AWS access key ID for Bedrock access |
-| `AWS_SECRET_ACCESS_KEY` | Yes | *(empty)* | AWS secret access key for Bedrock access |
+| `AWS_REGION` | Yes | `ap-south-1` | AWS region for Bedrock |
 | `BEDROCK_MODEL_ID` | No | `anthropic.claude-3-haiku-20240307` | Amazon Bedrock model identifier |
 | `GITHUB_TOKEN` | Yes | *(empty)* | GitHub personal access token for repo access |
 | `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated list of allowed CORS origins |
 | `PORT` | No | `8080` | Port the server listens on (App Runner) |
 
-### Environment Variables for Bedrock IAM Permissions
+### IAM Role Permissions
 
-The Lambda/App Runner service role needs the following IAM permissions for Amazon Bedrock:
+The App Runner service role needs the following IAM permissions for Amazon Bedrock:
 
 ```json
 {
@@ -212,7 +176,9 @@ The Lambda/App Runner service role needs the following IAM permissions for Amazo
 }
 ```
 
-MIT
+boto3 automatically uses the App Runner IAM role for Bedrock access — no `AWS_ACCESS_KEY_ID` or `AWS_SECRET_ACCESS_KEY` environment variables are needed.
+
+## License
 
 ## Contributing
 
