@@ -41,12 +41,6 @@ frontend:
 
 ### 3. Environment Variables
 
-Set the following environment variables in Amplify Console:
-
-| Variable | Value |
-|----------|-------|
-| `VITE_API_URL` | Your backend API URL (e.g., `https://api.repodoc.ai`) |
-
 ### 4. Custom Domain (Optional)
 
 1. Go to Amplify Console > App settings > Domain management

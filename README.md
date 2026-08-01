@@ -173,11 +173,7 @@ The backend is now accessible at `http://<instance-public-ip>/`.
 
 #### Step 6: Connect Amplify Frontend
 
-Set the `VITE_API_URL` environment variable in Amplify to the EC2 instance URL:
-
-```
-VITE_API_URL=http://<instance-public-ip>
-```
+Since both frontend and backend now share the same origin via Nginx, no `VITE_API_URL` environment variable is needed. The frontend automatically proxies API requests through Nginx.
 
 Then rebuild and redeploy the Amplify frontend.
 
@@ -229,7 +225,7 @@ cp .env.example .env
 | `AWS_REGION` | Yes | `ap-south-1` | AWS region for Bedrock |
 | `BEDROCK_MODEL_ID` | No | `anthropic.claude-3-haiku-20240307` | Amazon Bedrock model identifier |
 | `GITHUB_TOKEN` | Yes | *(empty)* | GitHub personal access token for repo access |
-| `CORS_ORIGINS` | Yes | *(empty)* | Comma-separated list of allowed CORS origins (set to Amplify frontend URL in production) |
+| `CORS_ORIGINS` | No | `http://localhost:3000` | Comma-separated list of allowed CORS origins (for dev only; not needed in production) |
 | `PORT` | No | `8000` | Port the server listens on (EC2) |
 
 ### Systemd Service
