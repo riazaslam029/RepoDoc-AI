@@ -37,8 +37,8 @@ export const validateRepoUrl = async (url: string): Promise<{ valid: boolean; er
   }
 };
 
-export const analyzeRepository = async (repoUrl: string): Promise<{ data: AnalysisResult }> => {
-    const response = await api.post('/v1/analyze', { repo_url: repoUrl });
+export const analyzeRepository = async (repoUrl: string): Promise<AnalysisResult> => {
+  const response = await api.post('/api/v1/analyze', { repo_url: repoUrl });
   return response.data;
 };
 

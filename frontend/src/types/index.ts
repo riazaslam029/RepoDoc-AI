@@ -16,15 +16,15 @@ export interface Repository {
 }
 
 export interface AnalysisResult {
-  repository: Repository;
-  tech_stack: TechStack;
-  folder_structure: string;
-  architecture_summary: string;
-  readme_content: string;
-  installation_guide: string;
-  api_documentation: string;
-  health_score: HealthScore;
-  suggestions: string[];
+  repository?: Repository;
+  tech_stack?: TechStack;
+  folder_structure?: string;
+  architecture_summary?: string;
+  readme_content?: string;
+  installation_guide?: string;
+  api_documentation?: string;
+  health_score?: HealthScore;
+  suggestions?: string[];
 }
 
 export interface TechStack {

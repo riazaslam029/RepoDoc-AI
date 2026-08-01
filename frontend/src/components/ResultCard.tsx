@@ -4,15 +4,15 @@ import { DownloadIcon, CopyIcon, FolderIcon, ServerIcon, RocketIcon, ShieldCheck
 import { downloadReadme } from '../services/api';
 
 interface ResultCardProps {
-  repository: Repository;
-  techStack: TechStack;
-  folderStructure: string;
-  architectureSummary: string;
-  readmeContent: string;
-  installationGuide: string;
-  apiDocumentation: string;
-  healthScore: HealthScore;
-  suggestions: string[];
+  repository?: Repository;
+  techStack?: TechStack;
+  folderStructure?: string;
+  architectureSummary?: string;
+  readmeContent?: string;
+  installationGuide?: string;
+  apiDocumentation?: string;
+  healthScore?: HealthScore;
+  suggestions?: string[];
 }
 
 const ResultCard = ({
@@ -32,12 +32,12 @@ const ResultCard = ({
 
   const handleCopyReadme = async () => {
     try {
-      await navigator.clipboard.writeText(readmeContent);
+      await navigator.clipboard.writeText(readmeContent || '');
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
       const textArea = document.createElement('textarea');
-      textArea.value = readmeContent;
+      textArea.value = readmeContent || '';
       document.body.appendChild(textArea);
       textArea.select();
       document.execCommand('copy');
@@ -48,11 +48,11 @@ const ResultCard = ({
   };
 
   const handleDownload = () => {
-    downloadReadme(readmeContent);
+    downloadReadme(readmeContent || '');
   };
 
   const handleDownloadAll = () => {
-    const allDocs = `# ${repository.name}\n\n${readmeContent}\n\n---\n\n## Installation Guide\n\n${installationGuide}\n\n---\n\n## Architecture\n\n${architectureSummary}\n\n---\n\n## API Documentation\n\n${apiDocumentation}\n\n---\n\n## Health Score\n\n${JSON.stringify(healthScore, null, 2)}\n\n---\n\n## Suggestions\n\n${suggestions.map(s => `- ${s}`).join('\n')}`;
+    const allDocs = `# ${repository?.name || 'Repository'}\n\n${readmeContent || ''}\n\n---\n\n## Installation Guide\n\n${installationGuide || ''}\n\n---\n\n## Architecture\n\n${architectureSummary || ''}\n\n---\n\n## API Documentation\n\n${apiDocumentation || ''}\n\n---\n\n## Health Score\n\n${JSON.stringify(healthScore, null, 2)}\n\n---\n\n## Suggestions\n\n${(suggestions || []).map(s => `- ${s}`).join('\n')}`;
     downloadReadme(allDocs);
   };
 
@@ -73,8 +73,8 @@ const ResultCard = ({
       <div className="card p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-bold">{repository.name}</h2>
-            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{repository.full_name}</p>
+            <h2 className="text-2xl font-bold">{repository?.name || 'Unknown Repository'}</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{repository?.full_name || ''}</p>
           </div>
           <div className="flex gap-3 flex-wrap">
             <button onClick={handleDownloadAll} className="btn-secondary flex items-center gap-2 text-sm">
@@ -93,16 +93,16 @@ const ResultCard = ({
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-sm font-medium">
-            <ShieldCheckIcon className="w-4 h-4" />
-            Health: {healthScore.overall}/100
-          </span>
-          {repository.language && (
+              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-900/30 text-brand-700 dark:text-brand-300 text-sm font-medium">
+                <ShieldCheckIcon className="w-4 h-4" />
+                Health: {healthScore?.overall ?? 0}/100
+              </span>
+          {repository?.language && (
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm">
               {repository.language}
             </span>
           )}
-          {repository.stargazers_count > 0 && (
+          {repository?.stargazers_count !== undefined && repository.stargazers_count > 0 && (
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm">
               ⭐ {repository.stargazers_count}
             </span>
@@ -133,7 +133,7 @@ const ResultCard = ({
                   <RocketIcon className="w-5 h-5 text-brand-500" />
                   Project Overview
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400">{repository.description || 'No description provided.'}</p>
+                <p className="text-gray-600 dark:text-gray-400">{repository?.description || 'No description provided.'}</p>
               </div>
 
               <div>
@@ -141,7 +141,7 @@ const ResultCard = ({
                   <FolderIcon className="w-5 h-5 text-brand-500" />
                   Folder Structure
                 </h3>
-                <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto font-mono">{folderStructure}</pre>
+                <pre className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4 text-sm overflow-x-auto font-mono">{folderStructure || 'No folder structure available.'}</pre>
               </div>
 
               <div>
@@ -149,7 +149,7 @@ const ResultCard = ({
                   <ServerIcon className="w-5 h-5 text-brand-500" />
                   Architecture Summary
                 </h3>
-                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{architectureSummary}</p>
+                <p className="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">{architectureSummary || 'No architecture summary available.'}</p>
               </div>
             </div>
           )}
@@ -158,7 +158,7 @@ const ResultCard = ({
             <div>
               <h3 className="text-lg font-semibold mb-3">Generated README</h3>
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-6 font-mono text-sm whitespace-pre-wrap border border-gray-200 dark:border-gray-800">
-                {readmeContent}
+                {readmeContent || 'No README content available.'}
               </div>
             </div>
           )}
@@ -170,24 +170,24 @@ const ResultCard = ({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <span className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-600">Language</span>
-                    <p className="font-medium mt-1">{techStack.language || 'Not detected'}</p>
+                    <p className="font-medium mt-1">{techStack?.language || 'Not detected'}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <span className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-600">Framework</span>
-                    <p className="font-medium mt-1">{techStack.framework || 'Not detected'}</p>
+                    <p className="font-medium mt-1">{techStack?.framework || 'Not detected'}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <span className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-600">Database</span>
-                    <p className="font-medium mt-1">{techStack.database || 'Not detected'}</p>
+                    <p className="font-medium mt-1">{techStack?.database || 'Not detected'}</p>
                   </div>
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
                     <span className="text-xs uppercase tracking-wider text-gray-400 dark:text-gray-600">Deployment</span>
-                    <p className="font-medium mt-1">{techStack.deployment || 'Not detected'}</p>
+                    <p className="font-medium mt-1">{techStack?.deployment || 'Not detected'}</p>
                   </div>
                 </div>
               </div>
 
-              {techStack.dependencies.length > 0 && (
+              {techStack?.dependencies && techStack.dependencies.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Dependencies</h4>
                   <div className="flex flex-wrap gap-2">
@@ -217,8 +217,8 @@ const ResultCard = ({
           {activeTab === 'health' && (
             <div className="space-y-6">
               <div className="text-center">
-                <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${scoreBg(healthScore.overall)} ${scoreColor(healthScore.overall)} text-4xl font-extrabold mb-4`}>
-                  {healthScore.overall}
+                <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full ${scoreBg(healthScore?.overall ?? 0)} ${scoreColor(healthScore?.overall ?? 0)} text-4xl font-extrabold mb-4`}>
+                  {healthScore?.overall ?? 0}
                 </div>
                 <h3 className="text-lg font-semibold">Documentation Health Score</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Out of 100</p>
@@ -226,13 +226,13 @@ const ResultCard = ({
 
               <div className="space-y-3">
                 {[
-                  { label: 'README Quality', value: healthScore.readme_quality, max: 100 },
-                  { label: 'Has License', value: healthScore.has_license ? 100 : 0, max: 100 },
-                  { label: 'Has Contributing Guide', value: healthScore.has_contributing ? 100 : 0, max: 100 },
-                  { label: 'Has Screenshots', value: healthScore.has_screenshots ? 100 : 0, max: 100 },
-                  { label: 'Has API Docs', value: healthScore.has_api_docs ? 100 : 0, max: 100 },
-                  { label: 'Has Architecture Docs', value: healthScore.has_architecture ? 100 : 0, max: 100 },
-                  { label: 'Has Examples', value: healthScore.has_examples ? 100 : 0, max: 100 },
+                  { label: 'README Quality', value: healthScore?.readme_quality ?? 0, max: 100 },
+                  { label: 'Has License', value: healthScore?.has_license ? 100 : 0, max: 100 },
+                  { label: 'Has Contributing Guide', value: healthScore?.has_contributing ? 100 : 0, max: 100 },
+                  { label: 'Has Screenshots', value: healthScore?.has_screenshots ? 100 : 0, max: 100 },
+                  { label: 'Has API Docs', value: healthScore?.has_api_docs ? 100 : 0, max: 100 },
+                  { label: 'Has Architecture Docs', value: healthScore?.has_architecture ? 100 : 0, max: 100 },
+                  { label: 'Has Examples', value: healthScore?.has_examples ? 100 : 0, max: 100 },
                 ].map((item, i) => (
                   <div key={i}>
                     <div className="flex justify-between text-sm mb-1">
@@ -251,7 +251,7 @@ const ResultCard = ({
                 ))}
               </div>
 
-              {suggestions.length > 0 && (
+              {suggestions && suggestions.length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3">Improvement Suggestions</h3>
                   <ul className="space-y-2">

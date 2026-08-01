@@ -34,7 +34,7 @@ const DashboardPage = () => {
     try {
       const response = await analyzeRepository(repoUrl);
       setStatus({ status: 'complete', progress: 100, message: 'Analysis complete!' });
-      setResult(response.data);
+      setResult(response);
     } catch (err) {
       setStatus({ status: 'error', progress: 0, message: 'Analysis failed' });
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
